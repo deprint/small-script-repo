@@ -1,0 +1,66 @@
+#!/bin/env python2
+# small-script-repo
+# Copyright (C) 2015  Fabian Stiewitz <fabian.stiewitz@protonmail.ch>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+def find_call(path):
+    exit(subprocess.call('find ' + path + ' -maxdepth 1 -xtype d -not -name ".*" -not -name "' + os.path.basename(path) + '" -printf "%f\n" -or -executable -xtype f -not -name "*~" -printf "%f\n"', shell=True))
+
+def list (pwd,caller,args):
+    path = pwd
+    prev_path = pwd
+    for arg in args:
+        path = path + "/" + arg
+        if os.path.exists(path):
+            if os.path.isfile(path):
+                print(arg)
+                exit(0)
+        else:
+            find_call(prev_path)
+        prev_path = path
+    find_call(path)
+
+if __name__ == "__main__":
+    import sys
+    import subprocess
+    import os.path
+    try:
+        caller_path = os.readlink(sys.argv[0])
+    except:
+        caller_path = sys.argv[0]
+    caller = os.path.basename(caller_path)
+    pwd = os.path.dirname(caller_path)
+    sys.argv[0] = pwd
+    if len(sys.argv) == 1:
+        print("No arguments specified")
+        exit(1)
+    if sys.argv[1] == "--list":
+        list(pwd,caller,sys.argv[2:])
+    cmd_args = sys.argv[1:]
+    for arg in sys.argv[1:]:
+        sys.argv[0] = sys.argv[0] + "/" + arg
+        cmd_args.pop(0)
+        if os.path.isfile(sys.argv[0]):
+            cmd_args.insert(0,sys.argv[0])
+            subprocess.call(cmd_args)
+            exit(0)
+        elif not os.path.exists(sys.argv[0]):
+            print("Script/Folder " + sys.argv[0] + " does not exist")
+            exit(1)
+    if os.path.isdir(sys.argv[0]):
+        exit(subprocess.call(pwd + "/" + caller + " --list " + ' '.join(sys.argv[1:]),shell=True))
+    else:
+        print("Script " + sys.argv[0] + " not found")
+        exit(1)

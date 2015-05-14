@@ -1,0 +1,51 @@
+#!/bin/bash
+# small-script-repo
+# Copyright (C) 2015  Fabian Stiewitz <fabian.stiewitz@protonmail.ch>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+#Check input
+if [ $# != 2 ]
+then
+    echo "No argument specified" 1>&2
+    exit 1
+fi
+
+name=$1
+folder=$2
+absfolder=`realpath $folder`
+ssrfolder=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
+
+if [[ $name == *" "* ]]
+then
+    echo "Name should not contain whitespaces" 1>&2
+    exit 1
+fi
+
+echo "Copy main script"
+if [ -x "${folder%/}/$name" ]
+then
+    echo "Main script already exists"
+else
+    cp "$ssrfolder/small-script-repo" "${folder%/}/$name"
+fi
+
+echo "Link to /usr/local/bin/$name"
+ln -s "$absfolder/$name" "/usr/local/bin/$name"
+
+echo "Generate bash completion script"
+sed "s/#NAME#/$name/g" "$ssrfolder/completion.sh.template" > "/etc/bash_completion.d/$name"
+echo "Use \"source /etc/bash_completion.d/$name\" or restart this terminal to update bash completion"
