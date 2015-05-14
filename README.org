@@ -1,0 +1,46 @@
+#+TITLE: small-script-repo
+Call your scripts more easily without the hassle of copying them to ~/usr/local/bin~, managing dozens of symlinks or changing $PATH
+* Features
+- Keep your scripts in a folder of your choice but still call them as if they were in $PATH
+- Organize your scripts by putting them into subfolders
+- Bash completion of script names
+- Only requires one file in your script folder, one symlink and one bash completion script to work.
+* Requirements
+- python2.7
+- bash
+- bash-completion
+* Usage
+** Create a repo from an existing folder structure
+#+NAME: Example
+#+BEGIN_SRC shell
+  small-script-repo repo create name-of-repo /Path/to/folder
+#+END_SRC
+"Creating a repo" means copying the main script to ~/Path/to/folder/name-of-repo~, the completion script to ~/etc/bash_completion.d/name-of-repo~ and placing a symlink to the main script in ~/usr/local/bin/~
+** Call scripts inside your repo
+#+NAME: Example
+#+BEGIN_SRC shell
+  name-of-repo foo bar hello.sh args
+#+END_SRC
+This call executes ~foo/bar/hello.sh args~ of the small-script-repo ~name-of-repo~
+** Remove a repo
+This only removes the main script, the symlink in ~/usr/local/bin~ and the bash completion script. _Your_ scripts remain untouched.
+#+NAME: Example
+#+BEGIN_SRC shell
+  small-script-repo repo remove name
+#+END_SRC
+* Installation
+** Clone this repository
+This repository only provides _tools_ for creating and removing small-script-repos. The small-script-repos created by _you_ do not rely on these tools, so you can delete this cloned git repo afterwards and still use your own small-script-repos.
+If you want to use these tools in the future, keep this git repo somewhere permanent.
+#+NAME: Clone
+#+BEGIN_SRC shell
+  git clone https://github.com/deprint/small-script-repo small-script-repo
+#+END_SRC
+** Create a small-script-repo of small-script-repo
+The tools to create and remove small-script-repos are located in ~repo/~. If you want to "install" the tools to use them in the future, copy the tools to a good folder (e.g. ~/usr/local/bin/~)  and create a small-script-repo of small-script-repo's repo:
+#+NAME: Install
+#+BEGIN_SRC
+  sudo cp small-script-repo /usr/local/share -Rv
+  sudo /usr/local/share/small-script-repo/small-script-repo repo create small-script-repo /usr/local/share/small-script-repo
+#+END_SRC
+
