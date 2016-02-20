@@ -6,7 +6,7 @@ Call your scripts more easily without the hassle of copying them to ~/usr/local/
 - Bash completion of script names
 - Only requires one file in your script folder, one symlink and one bash completion script to work.
 * Requirements
-- python2.7
+- perl
 - bash
 - bash-completion
 * Usage
@@ -43,4 +43,3 @@ The tools to create and remove small-script-repos are located in ~repo/~. If you
   sudo cp small-script-repo /usr/local/share -Rv
   sudo /usr/local/share/small-script-repo/small-script-repo repo create small-script-repo /usr/local/share/small-script-repo
 #+END_SRC
-

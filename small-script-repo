@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/perl
 # small-script-repo
-# Copyright (C) 2015  Fabian Stiewitz <fabian.stiewitz@protonmail.ch>
+# Copyright (C) 2016  Fabian Stiewitz <fabian.stiewitz@protonmail.ch>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,52 +15,55 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def find_call(path):
-    exit(subprocess.call('find ' + path + ' -maxdepth 1 -xtype d -not -name ".*" -not -name "' + os.path.basename(path) + '" -printf "%f\n" -or -executable -xtype f -not -name "*~" -printf "%f\n"', shell=True))
+use File::Basename;
+use File::Spec::Functions;
 
-def list (pwd,caller,args):
-    path = pwd
-    prev_path = pwd
-    for arg in args:
-        path = path + "/" + arg
-        if os.path.exists(path):
-            if os.path.isfile(path):
-                print(arg)
-                exit(0)
-        else:
-            find_call(prev_path)
-        prev_path = path
-    find_call(path)
+die "No arguments specified" unless @ARGV;
 
-if __name__ == "__main__":
-    import sys
-    import subprocess
-    import os.path
-    try:
-        caller_path = os.readlink(sys.argv[0])
-    except:
-        caller_path = sys.argv[0]
-    caller = os.path.basename(caller_path)
-    pwd = os.path.dirname(caller_path)
-    sys.argv[0] = pwd
-    if len(sys.argv) == 1:
-        print("No arguments specified")
-        exit(1)
-    if sys.argv[1] == "--list":
-        list(pwd,caller,sys.argv[2:])
-    cmd_args = sys.argv[1:]
-    for arg in sys.argv[1:]:
-        sys.argv[0] = sys.argv[0] + "/" + arg
-        cmd_args.pop(0)
-        if os.path.isfile(sys.argv[0]):
-            cmd_args.insert(0,sys.argv[0])
-            subprocess.call(cmd_args)
-            exit(0)
-        elif not os.path.exists(sys.argv[0]):
-            print("Script/Folder " + sys.argv[0] + " does not exist")
-            exit(1)
-    if os.path.isdir(sys.argv[0]):
-        exit(subprocess.call(pwd + "/" + caller + " --list " + ' '.join(sys.argv[1:]),shell=True))
-    else:
-        print("Script " + sys.argv[0] + " not found")
-        exit(1)
+my ($caller_path, $caller, $pwd);
+if (-l $0) {
+  die "readlink $0: $!" unless ($caller_path = readlink $0);
+} else {
+  $caller_path = $0;
+}
+
+$caller = basename $caller_path;
+$pwd = dirname $caller_path;
+
+if ($ARGV[0] eq "--list") {
+
+  sub list_dir {
+    my $pwd = shift;
+    opendir DIR, $pwd || die "Cannot open $pwd: $!";
+    foreach my $file (readdir DIR) {
+      chomp $file;
+      my $path = catdir($pwd, $file);
+      next unless (-d $path) || (-f -x $path);
+      next if ($file =~ /^\.|~$/);
+      print $file . "\n";
+    }
+    closedir DIR;
+    exit;
+  }
+
+  my @parts = splice @ARGV, 1;
+  my $prev_pwd = $pwd;
+  foreach my $part (@parts) {
+    $pwd = catdir($pwd, $part);
+    if (-e $pwd) {if (-f $pwd) {print $part, "\n"; exit;}}
+    else {list_dir($prev_pwd);}
+    $prev_pwd = $pwd;
+  }
+  list_dir($pwd);
+} else {
+  my $cmd = $pwd;
+  my @cmd_args = @ARGV;
+  foreach my $part (@ARGV) {
+    $cmd = catdir($cmd, $part);
+    shift @cmd_args;
+    if (-f $cmd) {exec ($cmd, @cmd_args);}
+    elsif (!-e $cmd) {die "Script/Folder $cmd does not exist";}
+  }
+  if (-d $cmd) {exec ($caller_path, '--list', @ARGV);}
+  else {die "Script $cmd not found";}
+}

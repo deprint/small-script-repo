@@ -5,7 +5,7 @@ function _#NAME#_complete()
 {
     cur=${COMP_WORDS[COMP_CWORD]}
     COMP_WORDS[0]="--list"
-    current_cmd_list=`#NAME# ${COMP_WORDS[@]}`
+    current_cmd_list=$(#NAME# ${COMP_WORDS[*]})
     COMPREPLY=( $( compgen -W "${current_cmd_list}" -- "${cur}"  ) )
 }
 
